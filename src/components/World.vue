@@ -16,7 +16,7 @@ const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('src/assets/draco/')
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(dracoLoader)
-const loader = new THREE.TextureLoader()
+let loader = new THREE.TextureLoader()
 
 const modelProperties = [
   {
@@ -60,37 +60,31 @@ const modelProperties = [
 ]
 
 // Textures
-const sakuraTexture = loader.load(`/textures/sakura2.jpg`)
-const sakura3Texture = loader.load(`/textures/sakura3.jpg`)
-sakuraTexture.wrapS = THREE.RepeatWrapping
-sakuraTexture.wrapT = THREE.RepeatWrapping
-sakuraTexture.repeat.x = 2
-sakuraTexture.repeat.y = 3
-sakuraTexture.rotation = Math.PI * 0.25
-sakuraTexture.center.x = 0.5
-sakuraTexture.center.y = 0.5
+let sakuraTexture = loader.load(`/textures/sakura2.jpg`)
+let sakura3Texture = loader.load(`/textures/sakura3.jpg`)
 
 // change top texture
+let texturenewName = 'sakura2'
 
+const changeName = (name) => {
+  texturenewName = name
+}
 
 // Change model
 const changeModel = async (model) => {
   // Remove previous model
   scene.remove(scene.children[3])
   // Load new model
-  await gltfLoader.load(`/models/${model.name}.glb`, (gltf) => {
+  gltfLoader.load(`/models/${model.name}.glb`, (gltf) => {
     const hoodie = gltf.scene.children[0]
     hoodie.traverse((child) => {
       if (child.material?.name === 'parker') {
-        child.material.map = new THREE.TextureLoader().load(`/textures/${model.texture.top}.jpg`)
-        child.material.map.needsUpdate = true;
+        child.material.map = new THREE.TextureLoader().load(`/textures/${texturenewName}.jpg`)
+        child.material.needsUpdate = true;
       } else if (child.material?.name === 'skirt') {
-        child.material.map = new THREE.TextureLoader().load(`/textures/${model.texture.bottom}.jpg`)
-        child.material.map.needsUpdate = true;
+        child.material.map = sakura3Texture
       }
       if (child.isMesh) {
-        console.log(child.material)
-
         child.material.roughness = 1;
       }
     })
@@ -102,36 +96,6 @@ const changeModel = async (model) => {
 
 changeModel(modelProperties[1])
 
-// change top texture
-const changeTop = (texture) => {
-  console.log(modelProperties[1].texture.top)
-  modelProperties[1].texture.top = texture
-}
-
-// Geometry
-/*
-gltfLoader.load('/models/hoodie_and_skirt.glb', (gltf) => {
-  const hoodie = gltf.scene.children[0]
-  hoodie.traverse((child) => {
-    if (child.material?.name === 'skirt1') {
-      child.material.map = sakuraTexture
-      // child.material.map.needsUpdate = true;
-    } else if (child.material?.name === 'shirt1') {
-      child.material.map = sakura3Texture
-      // child.material.map.needsUpdate = true;
-    }
-    if (child.isMesh) {
-      console.log(child.material)
-      child.material.roughness = 1;
-    }
-  })
-  hoodie.position.set(0, 0, 0)
-  hoodie.scale.set(0.1, 0.1, 0.1)
-  gui.add(hoodie.position, 'x').min(-20).max(20).step(0.01)
-  gui.add(hoodie.position, 'y').min(-20).max(20).step(0.01)
-  gui.add(hoodie.position, 'z').min(-20).max(20).step(0.01)
-  scene.add(hoodie)
-}) */
 
 // Lights
 const ambientLight = new THREE.AmbientLight('#ffffff', 0.5)
@@ -186,10 +150,11 @@ onMounted(() => {
 <template>
   <div>
     <button v-for="(model, index) in modelProperties" :key="index" @click="changeModel(model)">
-      {{ model.name + index }}
+      <p>Model: </p>{{ model.name + index }}
     </button>
-    <button @click="changeTop('sakura3')">sakura3</button>
-    <button @click="changeTop('sakura2')">sakura2</button>
+    <p>-------</p>
+    <button @click="changeName('sakura3')">sakura3</button>
+    <button @click="changeName('sakura2')">sakura2</button>
   </div>
   <canvas class="webgl" ref="webgl"></canvas>
 </template>
