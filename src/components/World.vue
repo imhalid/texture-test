@@ -13,7 +13,7 @@ const debugObject = {}
 const scene = new THREE.Scene()
 const webgl = ref()
 const dracoLoader = new DRACOLoader()
-dracoLoader.setDecoderPath('src/assets/draco/')
+dracoLoader.setDecoderPath('/src/assets/draco/')
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(dracoLoader)
 let loader = new THREE.TextureLoader()
@@ -22,10 +22,8 @@ const modelProperties = [
   {
     name: 'hoodie_and_skirt',
     top: 'parker',
-    bottom: 'skirt',
     texture: {
       top: 'sakura2',
-      bottom: 'sakura3'
     },
     position: {
       x: 0,
@@ -41,10 +39,8 @@ const modelProperties = [
   {
     name: 'puff_sleeve_and_jumper_skirt',
     top: 'skirt1',
-    bottom: 'shirt1',
     texture: {
       top: 'sakura2',
-      bottom: 'sakura3'
     },
     position: {
       x: 0,
@@ -59,16 +55,8 @@ const modelProperties = [
   }
 ]
 
-// Textures
-let sakuraTexture = loader.load(`/textures/sakura2.jpg`)
-let sakura3Texture = loader.load(`/textures/sakura3.jpg`)
-
 // change top texture
-let texturenewName = 'sakura2'
-
-const changeName = (name) => {
-  texturenewName = name
-}
+let textureNewName = 'sakura2'
 
 // Change model
 const changeModel = async (model) => {
@@ -79,10 +67,8 @@ const changeModel = async (model) => {
     const hoodie = gltf.scene.children[0]
     hoodie.traverse((child) => {
       if (child.material?.name === 'parker') {
-        child.material.map = new THREE.TextureLoader().load(`/textures/${texturenewName}.jpg`)
+        child.material.map = new THREE.TextureLoader().load(`/textures/${textureNewName}.jpg`)
         child.material.needsUpdate = true;
-      } else if (child.material?.name === 'skirt') {
-        child.material.map = sakura3Texture
       }
       if (child.isMesh) {
         child.material.roughness = 1;
@@ -92,6 +78,10 @@ const changeModel = async (model) => {
     hoodie.scale.set(model.scale.x, model.scale.y, model.scale.z)
     scene.add(hoodie)
   })
+}
+
+const changeName = (name) => {
+  textureNewName = name
 }
 
 changeModel(modelProperties[1])
@@ -153,8 +143,8 @@ onMounted(() => {
       <p>Model: </p>{{ model.name + index }}
     </button>
     <p>-------</p>
-    <button @click="changeName('sakura3')">sakura3</button>
-    <button @click="changeName('sakura2')">sakura2</button>
+    <button @click="changeName('sakura3')">texture 1</button>
+    <button @click="changeName('sakura2')">texture 2</button>
   </div>
   <canvas class="webgl" ref="webgl"></canvas>
 </template>
