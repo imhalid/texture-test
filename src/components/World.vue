@@ -13,14 +13,55 @@ const debugObject = {}
 const scene = new THREE.Scene()
 const webgl = ref()
 const dracoLoader = new DRACOLoader()
-dracoLoader.setDecoderPath('/draco/')
+dracoLoader.setDecoderPath('src/assets/draco/')
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(dracoLoader)
 const loader = new THREE.TextureLoader()
 
+const modelProperties = [
+  {
+    name: 'hoodie_and_skirt',
+    top: 'parker',
+    bottom: 'skirt',
+    texture: {
+      top: 'sakura2',
+      bottom: 'sakura3'
+    },
+    position: {
+      x: 0,
+      y: -1,
+      z: 0
+    },
+    scale: {
+      x: 0.04,
+      y: 0.04,
+      z: 0.04
+    }
+  },
+  {
+    name: 'puff_sleeve_and_jumper_skirt',
+    top: 'skirt1',
+    bottom: 'shirt1',
+    texture: {
+      top: 'sakura2',
+      bottom: 'sakura3'
+    },
+    position: {
+      x: 0,
+      y: -0.2,
+      z: -0
+    },
+    scale: {
+      x: 0.5,
+      y: 0.5,
+      z: 0.5
+    }
+  }
+]
+
 // Textures
-const sakuraTexture = loader.load('/textures/sakura2.jpg')
-const sakura3Texture = loader.load('/textures/sakura3.jpg')
+const sakuraTexture = loader.load(`/textures/sakura2.jpg`)
+const sakura3Texture = loader.load(`/textures/sakura3.jpg`)
 sakuraTexture.wrapS = THREE.RepeatWrapping
 sakuraTexture.wrapT = THREE.RepeatWrapping
 sakuraTexture.repeat.x = 2
@@ -29,26 +70,68 @@ sakuraTexture.rotation = Math.PI * 0.25
 sakuraTexture.center.x = 0.5
 sakuraTexture.center.y = 0.5
 
+// change top texture
+
+
+// Change model
+const changeModel = async (model) => {
+  // Remove previous model
+  scene.remove(scene.children[3])
+  // Load new model
+  await gltfLoader.load(`/models/${model.name}.glb`, (gltf) => {
+    const hoodie = gltf.scene.children[0]
+    hoodie.traverse((child) => {
+      if (child.material?.name === 'parker') {
+        child.material.map = new THREE.TextureLoader().load(`/textures/${model.texture.top}.jpg`)
+        child.material.map.needsUpdate = true;
+      } else if (child.material?.name === 'skirt') {
+        child.material.map = new THREE.TextureLoader().load(`/textures/${model.texture.bottom}.jpg`)
+        child.material.map.needsUpdate = true;
+      }
+      if (child.isMesh) {
+        console.log(child.material)
+
+        child.material.roughness = 1;
+      }
+    })
+    hoodie.position.set(model.position.x, model.position.y, model.position.z)
+    hoodie.scale.set(model.scale.x, model.scale.y, model.scale.z)
+    scene.add(hoodie)
+  })
+}
+
+changeModel(modelProperties[1])
+
+// change top texture
+const changeTop = (texture) => {
+  console.log(modelProperties[1].texture.top)
+  modelProperties[1].texture.top = texture
+}
+
 // Geometry
+/*
 gltfLoader.load('/models/hoodie_and_skirt.glb', (gltf) => {
   const hoodie = gltf.scene.children[0]
   hoodie.traverse((child) => {
-    if (child.material?.name === 'parker') {
+    if (child.material?.name === 'skirt1') {
       child.material.map = sakuraTexture
       // child.material.map.needsUpdate = true;
-    } else if (child.material?.name === 'skirt') {
+    } else if (child.material?.name === 'shirt1') {
       child.material.map = sakura3Texture
       // child.material.map.needsUpdate = true;
     }
     if (child.isMesh) {
       console.log(child.material)
-      child.material.roughness = 0.5;
+      child.material.roughness = 1;
     }
   })
-  hoodie.scale.set(0.025, 0.025, 0.025)
-  hoodie.position.set(0, -2.9, 0)
+  hoodie.position.set(0, 0, 0)
+  hoodie.scale.set(0.1, 0.1, 0.1)
+  gui.add(hoodie.position, 'x').min(-20).max(20).step(0.01)
+  gui.add(hoodie.position, 'y').min(-20).max(20).step(0.01)
+  gui.add(hoodie.position, 'z').min(-20).max(20).step(0.01)
   scene.add(hoodie)
-})
+}) */
 
 // Lights
 const ambientLight = new THREE.AmbientLight('#ffffff', 0.5)
@@ -60,7 +143,7 @@ scene.add(directionalLight)
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
-camera.position.z = 2
+camera.position.z = 3
 scene.add(camera)
 scene.background = new THREE.Color('#000000')
 
@@ -101,5 +184,12 @@ onMounted(() => {
 </script>
 
 <template>
+  <div>
+    <button v-for="(model, index) in modelProperties" :key="index" @click="changeModel(model)">
+      {{ model.name + index }}
+    </button>
+    <button @click="changeTop('sakura3')">sakura3</button>
+    <button @click="changeTop('sakura2')">sakura2</button>
+  </div>
   <canvas class="webgl" ref="webgl"></canvas>
 </template>
