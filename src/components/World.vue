@@ -34,6 +34,11 @@ const environmentMapTexture = cubeTextureLoader.load([
 // Textures
 let sakuraTexture = loader.load(`/textures/sakura2.jpg`)
 let sakura3Texture = loader.load(`/textures/sakura3.jpg`)
+sakura3Texture.wrapS = THREE.RepeatWrapping
+sakura3Texture.wrapT = THREE.RepeatWrapping
+sakura3Texture.repeat.x = 1
+sakura3Texture.repeat.y = 2
+
 let hoodieBottomNormalMap = loader.load(`/textures/hoodieBottom.png`)
 let hoodieTopNormalMap = loader.load(`/textures/hoodieTop.png`)
 const topMaterial = new THREE.MeshStandardMaterial({
@@ -50,24 +55,24 @@ const bottomMaterial = new THREE.MeshStandardMaterial({
 
 
 const hoodieLoader = async () => {
-  const getObject3D = scene.getObjectByProperty('type', 'Object3D')
+  const getObject3D = scene.getObjectByProperty('type', 'Group')
   scene.remove(getObject3D)
-  gltfLoader.load(`/models/hoodie_and_skirt.glb`, (gltf) => {
-    const hoodie = gltf.scene.children[0];
-    hoodie.castShadow = true
-    hoodie.children[0].children[0].children[0].traverse((child) => {
-      child.material = bottomMaterial
-      child.material.normalMap = hoodieBottomNormalMap
-      child.material.normalScale.set(0.5, 0.5)
-      child.material.castShadow = true
+  gltfLoader.load(`/models/hoodie_and_skirt-optimized.glb`, (gltf) => {
+    const hoodie = gltf.scene
+    console.log(hoodie)
+      / hoodie.children[0].traverse((child) => {
+        child.material = bottomMaterial
+        child.material.normalMap = hoodieBottomNormalMap
+        child.material.normalScale.set(0.5, 0.5)
+        child.material.castShadow = true
 
-    })
-    hoodie.children[0].children[0].children[1].traverse((child) => {
+      })
+    hoodie.children[1].traverse((child) => {
       child.material = topMaterial
       child.material.normalMap = hoodieTopNormalMap
     })
     hoodie.position.set(0, -1, 0);
-    hoodie.scale.set(0.04, 0.04, 0.04);
+    hoodie.scale.set(0.7, 0.7, 0.7);
 
     scene.add(hoodie);
   });
@@ -76,14 +81,14 @@ const hoodieLoader = async () => {
 hoodieLoader()
 
 const puffLoader = async () => {
-  const getObject3D = scene.getObjectByProperty('type', 'Object3D')
+  const getObject3D = scene.getObjectByProperty('type', 'Group')
   scene.remove(getObject3D)
-  gltfLoader.load(`/models/puff_sleeve_and_jumper_skirt.glb`, (gltf) => {
-    const hoodie = gltf.scene.children[0];
-    hoodie.children[0].children[0].children[0].traverse((child) => {
+  gltfLoader.load(`/models/puff_sleeve_and_jumper_skirt-optimized.glb`, (gltf) => {
+    const hoodie = gltf.scene;
+    hoodie.children[0].traverse((child) => {
       child.material = topMaterial
     })
-    hoodie.children[0].children[0].children[1].traverse((child) => {
+    hoodie.children[1].traverse((child) => {
       child.material = bottomMaterial
     })
 
