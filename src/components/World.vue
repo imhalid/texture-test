@@ -13,7 +13,7 @@ const debugObject = {}
 const scene = new THREE.Scene()
 const webgl = ref()
 const dracoLoader = new DRACOLoader()
-dracoLoader.setDecoderPath('src/assets/draco/')
+dracoLoader.setDecoderPath('/draco/')
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(dracoLoader)
 let loader = new THREE.TextureLoader()
