@@ -13,93 +13,133 @@ const debugObject = {}
 const scene = new THREE.Scene()
 const webgl = ref()
 const dracoLoader = new DRACOLoader()
-dracoLoader.setDecoderPath('/src/assets/draco/')
+dracoLoader.setDecoderPath('src/assets/draco/')
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(dracoLoader)
 let loader = new THREE.TextureLoader()
 
-const modelProperties = [
-  {
-    name: 'hoodie_and_skirt',
-    top: 'parker',
-    texture: {
-      top: 'sakura2',
-    },
-    position: {
-      x: 0,
-      y: -1,
-      z: 0
-    },
-    scale: {
-      x: 0.04,
-      y: 0.04,
-      z: 0.04
-    }
-  },
-  {
-    name: 'puff_sleeve_and_jumper_skirt',
-    top: 'skirt1',
-    texture: {
-      top: 'sakura2',
-    },
-    position: {
-      x: 0,
-      y: -0.2,
-      z: -0
-    },
-    scale: {
-      x: 0.5,
-      y: 0.5,
-      z: 0.5
-    }
-  }
-]
+// cubeEnvMap
+const cubeTextureLoader = new THREE.CubeTextureLoader()
+const environmentMapTexture = cubeTextureLoader.load([
+  'Standard-Cube-Map/px.png',
+  'Standard-Cube-Map/nx.png',
+  'Standard-Cube-Map/py.png',
+  'Standard-Cube-Map/ny.png',
+  'Standard-Cube-Map/pz.png',
+  'Standard-Cube-Map/nz.png',
+])
 
-// change top texture
-let textureNewName = 'sakura2'
 
-// Change model
-const changeModel = async (model) => {
-  // Remove previous model
-  scene.remove(scene.children[3])
-  // Load new model
-  gltfLoader.load(`/models/${model.name}.glb`, (gltf) => {
-    const hoodie = gltf.scene.children[0]
-    hoodie.traverse((child) => {
-      if (child.material?.name === 'parker') {
-        child.material.map = new THREE.TextureLoader().load(`/textures/${textureNewName}.jpg`)
-        child.material.needsUpdate = true;
-      }
-      if (child.isMesh) {
-        child.material.roughness = 1;
-      }
+
+// Textures
+let sakuraTexture = loader.load(`/textures/sakura2.jpg`)
+let sakura3Texture = loader.load(`/textures/sakura3.jpg`)
+let hoodieBottomNormalMap = loader.load(`/textures/hoodieBottom.png`)
+let hoodieTopNormalMap = loader.load(`/textures/hoodieTop.png`)
+const topMaterial = new THREE.MeshStandardMaterial({
+  map: sakura3Texture,
+  side: THREE.DoubleSide,
+})
+
+const bottomMaterial = new THREE.MeshStandardMaterial({
+  map: sakuraTexture,
+  side: THREE.DoubleSide,
+  envMap: environmentMapTexture,
+  castShadow: true,
+})
+
+
+const hoodieLoader = async () => {
+  const getObject3D = scene.getObjectByProperty('type', 'Object3D')
+  scene.remove(getObject3D)
+  gltfLoader.load(`/models/hoodie_and_skirt.glb`, (gltf) => {
+    const hoodie = gltf.scene.children[0];
+    hoodie.castShadow = true
+    hoodie.children[0].children[0].children[0].traverse((child) => {
+      child.material = bottomMaterial
+      child.material.normalMap = hoodieBottomNormalMap
+      child.material.normalScale.set(0.5, 0.5)
+      child.material.castShadow = true
+
     })
-    hoodie.position.set(model.position.x, model.position.y, model.position.z)
-    hoodie.scale.set(model.scale.x, model.scale.y, model.scale.z)
-    scene.add(hoodie)
-  })
+    hoodie.children[0].children[0].children[1].traverse((child) => {
+      child.material = topMaterial
+      child.material.normalMap = hoodieTopNormalMap
+    })
+    hoodie.position.set(0, -1, 0);
+    hoodie.scale.set(0.04, 0.04, 0.04);
+
+    scene.add(hoodie);
+  });
+};
+
+hoodieLoader()
+
+const puffLoader = async () => {
+  const getObject3D = scene.getObjectByProperty('type', 'Object3D')
+  scene.remove(getObject3D)
+  gltfLoader.load(`/models/puff_sleeve_and_jumper_skirt.glb`, (gltf) => {
+    const hoodie = gltf.scene.children[0];
+    hoodie.children[0].children[0].children[0].traverse((child) => {
+      child.material = topMaterial
+    })
+    hoodie.children[0].children[0].children[1].traverse((child) => {
+      child.material = bottomMaterial
+    })
+
+    hoodie.position.set(0, -0.2, 0);
+    hoodie.scale.set(0.45, 0.45, 0.45);
+
+    scene.add(hoodie);
+  });
+};
+
+
+
+
+const changemap = (texture, top) => {
+  console.log(texture)
+  if (top === 'top') {
+    topMaterial.dispose()
+    topMaterial.map = loader.load(`/textures/${texture}.jpg`)
+    topMaterial.needsUpdate = true
+  } else {
+    bottomMaterial.dispose()
+    bottomMaterial.map = loader.load(`/textures/${texture}.jpg`)
+    bottomMaterial.needsUpdate = true
+  }
 }
 
-const changeName = (name) => {
-  textureNewName = name
-}
 
-changeModel(modelProperties[1])
+
+
+
 
 
 // Lights
 const ambientLight = new THREE.AmbientLight('#ffffff', 0.5)
 scene.add(ambientLight)
 const directionalLight = new THREE.DirectionalLight('#ffffff', 0.5)
-directionalLight.position.set(2, 2, 2)
+directionalLight.position.set(2.91, 1.804, 1.558)
+directionalLight.shadow.camera.far = 15
+directionalLight.shadow.mapSize.set(1024, 1024)
 directionalLight.intensity = 0.5
+directionalLight.castShadow = true
+directionalLight.shadow.radius = 10
 scene.add(directionalLight)
+const directionalLightCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera)
+scene.add(directionalLightCameraHelper)
+gui.add(directionalLight, 'intensity').min(0).max(1).step(0.001)
+gui.add(directionalLight.position, 'x').min(-5).max(5).step(0.001)
+gui.add(directionalLight.position, 'y').min(-5).max(5).step(0.001)
+gui.add(directionalLight.position, 'z').min(-5).max(5).step(0.001)
+
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
 camera.position.z = 3
 scene.add(camera)
-scene.background = new THREE.Color('#000000')
+
 
 // Resize Canvas
 window.addEventListener('resize', () => {
@@ -108,14 +148,19 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
-
+scene.background = environmentMapTexture
+scene.environment = environmentMapTexture
+scene.backgroundBlurriness = 0.1
 // Renderer
 const setupRenderer = () => {
   renderer = new THREE.WebGLRenderer({ canvas: webgl.value, antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.render(scene, camera)
+  renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.useLegacyLights = true
+
 }
 
 const clock = new THREE.Clock()
@@ -124,6 +169,9 @@ onMounted(() => {
   // Controls
   const controls = new OrbitControls(camera, webgl.value)
   controls.enableDamping = true
+  controls.maxDistance = 5
+  controls.minDistance = 2
+  controls.enablePan = false
 
   // Animation
   const animation = () => {
@@ -139,12 +187,14 @@ onMounted(() => {
 
 <template>
   <div>
-    <button v-for="(model, index) in modelProperties" :key="index" @click="changeModel(model)">
-      <p>Model: </p>{{ model.name + index }}
-    </button>
-    <p>-------</p>
-    <button @click="changeName('sakura3')">texture 1</button>
-    <button @click="changeName('sakura2')">texture 2</button>
+    <button @click="hoodieLoader()">Hoodie</button>
+    <button @click="puffLoader()">Puff</button>
+    <span>-------</span>
+    <button @click="changemap('sakura2')">Bottom Texture 1</button>
+    <button @click="changemap('sakura3')">Bottom Texture 2</button>
+    <span>-------</span>
+    <button @click="changemap('sakura2', 'top')">Top Texture 1</button>
+    <button @click="changemap('sakura3', 'top')">Top Texture 2</button>
   </div>
   <canvas class="webgl" ref="webgl"></canvas>
 </template>
