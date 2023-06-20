@@ -132,8 +132,7 @@ directionalLight.intensity = 0.5
 directionalLight.castShadow = true
 directionalLight.shadow.radius = 10
 scene.add(directionalLight)
-const directionalLightCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera)
-scene.add(directionalLightCameraHelper)
+
 gui.add(directionalLight, 'intensity').min(0).max(1).step(0.001)
 gui.add(directionalLight.position, 'x').min(-5).max(5).step(0.001)
 gui.add(directionalLight.position, 'y').min(-5).max(5).step(0.001)
